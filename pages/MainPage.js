@@ -1,39 +1,87 @@
-import React from 'react';
+import React,{useState, useEffect} from 'react';
 import main from '../assets/main.png';
-import pizza from '../assets/pizza.png';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, YellowBox} from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView} from 'react-native';
+import data from '../data.json';
+import Card from '../components/Card';
+import Loading from '../components/Loading';
 
 export default function MainPage() {
   console.disableYellowBox = true;
-  //return 구문 밖에서는 슬래시 두개 방식으로 주석
-  return (
+
+  // 기존 꿀팁을 저장하고 있을 상태
+  const [state, setState] = useState([])
+  // 카테고리에 따라 다른 꿀팁을 그때그때 저장관리할 상태
+  const [cateState, setCateState] = useState([])
+
+  //컴포넌트에 상태를 여러개 만들어도 됨
+  //관리할 상태이름과 함수는 자유자재로 정의할 수 있음
+  //초기 상태값으로 리스트, 참거짓형, 딕셔너리, 숫자, 문자 등등 다양하게 들어갈 수 있음.
+  const [ready, setReady] = useState(true)
+
+  useEffect(() => {
+    // 뒤의 1000 숫자는 1초를 뜻함
+    // 1초 뒤에 실행되는 코드들이 담겨있는 함수
+    setTimeout(() => {
+      let tip = data.tip;
+      setState(tip)
+      setCateState(tip)
+      setReady(false)
+    }, 2000)
+  }, [])
+
+  const category = (cate) => {
+    if(cate == "전체보기") {
+      setCateState(state)
+    } else {
+      setCateState(state.filter((d) => {
+        return d.category == cate
+      }))
+    }
+  }
+
+  let todayWeather = 10 + 17;
+  let todayCondition = "흐림";
+
+  // 삼항연산자
+  // 처음 ready 상태값은 true 이므로 Loading 이 반환됨
+  // useEffect로 인해 데이터가 준비되고, ready 값이 변경되면 : 콜론 뒤의 값이 반환
+  return ready ? <Loading/> : (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>나만의 꿀팁</Text>
+      <Text style={styles.weather}>오늘의 날씨 : {todayWeather +  '℃ ' + todayCondition}</Text>
       <Image style={styles.mainImage} source={main}/>
-      <ScrollView style={styles.middleContainer} horizontal={true}>
-        <TouchableOpacity style={styles.middleButton01}>
+      <ScrollView style={styles.middleContainer} 
+                  showsHorizontalScrollIndicator={false}
+                  horizontal={true}>
+        <TouchableOpacity style={styles.middleButton00}
+                          onPress={() => {category('전체보기')}}>
+          <Text style={styles.middleButtonText}>전체보기</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.middleButton01}
+                          onPress={() => {category('생활')}}>
           <Text style={styles.middleButtonText}>생활</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.middleButton02}>
+        <TouchableOpacity style={styles.middleButton02}
+                          onPress={() => {category('재테크')}}>
           <Text style={styles.middleButtonText}>재테크</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.middleButton03}>
+        <TouchableOpacity style={styles.middleButton03}
+                          onPress={() => {category('반려견')}}>
           <Text style={styles.middleButtonText}>반려견</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.middleButton04}>
           <Text style={styles.middleButtonText}>꿀팁 찜</Text>
         </TouchableOpacity>
       </ScrollView>
-      <View style={styles.card}>
-        <Image source={pizza} style={styles.cardImage}/>
-        <View style={styles.cardText}>
-          <Text style={styles.cardTitle}>먹다 남은 피자를 촉촉하게!</Text>
-          <Text style={styles.cardDesc} numberOfLines={3} ellipsizeMode="tail">먹다 남은 피자는 수분이 날라가기 때문에 처음처럼 맛있게 먹을 수 없는데요. 이럴 경우 그릇에 물을 받아 전자레인지 안에서 1분 30초에서 2분 정도 함께 돌려주면 촉촉하게 먹을 수 있습니다. 물이 전자레인지 안에서 수증기를 일으키고, 피자에 촉촉함을 더해줍니다.</Text>
-          <Text style={styles.cardDate}>2020.09.09</Text>
-        </View>
+      <View style={styles.cardContainer}>
+        {
+          cateState.map((content, i) => {
+            return (<Card content={content} key={i}/>)
+          })
+        }
       </View>
     </ScrollView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -46,6 +94,10 @@ const styles = StyleSheet.create({
     marginTop: 50,
     marginLeft: 20
   },
+  weather:{
+    alignSelf:"flex-end",
+    paddingRight:20
+  },
   mainImage: {
     width: "90%",
     height: 200,
@@ -57,6 +109,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginLeft: 10,
     height: 60
+  },
+  middleButton00: {
+    width: 100,
+    height: 50,
+    padding: 15,
+    backgroundColor: "#CCC",
+    borderRadius: 15,
+    margin: 7
   },
   middleButton01: {
     width: 100,
@@ -95,33 +155,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center"
   },
-  card: {
-    flex: 1,
-    flexDirection: "row",
-    margin: 15,
-    borderBottomColor: "#EEE"
-  },
-  cardImage: {
-    flex: 1,
-    width: 100,
-    height: 100,
-    borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 10
-  },
-  cardText: {
-    flex: 2,
-    marginLeft: 10
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700"
-  },
-  cardDesc: {
-    fontSize: 15
-  },
-  cardDate: {
-    fontSize: 10,
-    color: "#AAA"
+  cardContainer: {
+    marginTop:10,
+    marginLeft:10
   }
-})
+});
